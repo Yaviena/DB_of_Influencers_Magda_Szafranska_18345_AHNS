@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 13, 2022 at 01:30 AM
+-- Generation Time: Jan 13, 2022 at 10:52 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.11
 
@@ -25,6 +25,17 @@ DELIMITER $$
 --
 -- Procedures
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AllInfluencerActions` ()  BEGIN
+    SELECT influencer.Id_influencer AS InfluencerID,
+    FullName(influencer.first_name, influencer.last_name) AS FullName,
+    service.name AS service,
+    influenceraction.date AS Date
+    FROM influencer, influenceraction, service
+    WHERE influencer.Id_influencer = influenceraction.Influencer_Id_influencer
+    AND influenceraction.Service_Id_service = service.Id_service
+    ORDER BY Date;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetFullInfluencerData` ()  BEGIN
     SELECT FullName(influencer.first_name, influencer.last_name) AS FullName,
     InfluencerLevel(influencer.followers) AS InfluencerType,
@@ -33,6 +44,18 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetFullInfluencerData` ()  BEGIN
     FROM influencer, address
     WHERE influencer.Address_Id_address = address.Id_address
     ORDER BY InfluencerType;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerActions` (IN `idInf` INT)  BEGIN
+    SELECT influencer.Id_influencer AS InfluencerID,
+    FullName(influencer.first_name, influencer.last_name) AS FullName,
+    service.name AS service,
+    influenceraction.date AS Date
+    FROM influencer, influenceraction, service
+    WHERE influencer.Id_influencer = idInf
+    AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
+    AND influenceraction.Service_Id_service = service.Id_service
+    ORDER BY Date;
 END$$
 
 --
