@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 12, 2022 at 04:51 PM
+-- Generation Time: Jan 13, 2022 at 01:30 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.11
 
@@ -22,6 +22,19 @@ SET time_zone = "+00:00";
 --
 
 DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetFullInfluencerData` ()  BEGIN
+    SELECT FullName(influencer.first_name, influencer.last_name) AS FullName,
+    InfluencerLevel(influencer.followers) AS InfluencerType,
+    influencer.discount_code AS DiscountCode,
+    address.city AS City
+    FROM influencer, address
+    WHERE influencer.Address_Id_address = address.Id_address
+    ORDER BY InfluencerType;
+END$$
+
 --
 -- Functions
 --
