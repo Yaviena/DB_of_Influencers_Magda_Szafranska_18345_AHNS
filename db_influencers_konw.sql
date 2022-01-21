@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 13, 2022 at 10:52 AM
+-- Generation Time: Jan 21, 2022 at 11:54 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.11
 
@@ -56,6 +56,28 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerActions` (IN `idInf` INT)
     AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
     AND influenceraction.Service_Id_service = service.Id_service
     ORDER BY Date;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerSalary` (IN `idInf` INT)  BEGIN
+    SELECT influencer.Id_influencer AS InfluencerID,
+    FullName(influencer.first_name, influencer.last_name) AS FullName,
+    influenceraction.Id_influencer_action AS ActionID,
+    service.name AS service,
+    salary.value AS PLN,
+    salary.date AS Date
+    FROM influencer, influenceraction, service, salary
+    WHERE influencer.Id_influencer = idInf
+    AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
+    AND influenceraction.Service_Id_service = service.Id_service
+    AND influencer.Id_influencer = salary.Influencer_Id_influencer
+    AND salary.InfluencerAction_Id_influencer_action = influenceraction.Id_influencer_action
+    ORDER BY Date;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ProductStock` (IN `productID` INT, IN `amount` INT)  BEGIN
+	UPDATE product
+    	SET product.Amount = product.Amount - amount
+    	WHERE product.Id_product = productID;
 END$$
 
 --
@@ -218,7 +240,11 @@ INSERT INTO `influenceraction` (`Id_influencer_action`, `Influencer_Id_influence
 (9, 10, 9, '2021-11-03'),
 (10, 8, 6, '2021-08-10'),
 (11, 1, 1, '2021-12-01'),
-(13, 4, 4, '2021-12-04');
+(13, 4, 4, '2021-12-04'),
+(14, 1, 9, '2022-01-13'),
+(15, 4, 1, '2022-01-01'),
+(16, 4, 4, '2022-01-04'),
+(17, 2, 8, NULL);
 
 --
 -- Triggers `influenceraction`
@@ -237,24 +263,25 @@ DELIMITER ;
 CREATE TABLE `product` (
   `Id_product` int(11) NOT NULL,
   `name` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `price` decimal(6,2) DEFAULT NULL
+  `price` decimal(6,2) DEFAULT NULL,
+  `Amount` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Dumping data for table `product`
 --
 
-INSERT INTO `product` (`Id_product`, `name`, `price`) VALUES
-(1, 'Modify Reductor', '129.00'),
-(2, 'Modify Femibra', '139.00'),
-(3, 'Gumka do włosów - lniana ', '29.00'),
-(4, 'Gumka do włosów - lniana XL', '49.00'),
-(5, 'Gumka do włosów - welurowa', '19.00'),
-(6, 'Gumka do włosów - welurowa XL', '29.00'),
-(7, 'Pełna kuracja Modify Reductor', '387.00'),
-(8, 'Pełna kuracja Modify Femibra', '417.00'),
-(9, 'Zestaw świąteczny Modify Reductor', '199.00'),
-(10, 'Zestaw świąteczny Modify Femibra', '256.00');
+INSERT INTO `product` (`Id_product`, `name`, `price`, `Amount`) VALUES
+(1, 'Modify Reductor', '129.00', 99),
+(2, 'Modify Femibra', '139.00', 67),
+(3, 'Gumka do włosów - lniana ', '29.00', 20),
+(4, 'Gumka do włosów - lniana XL', '49.00', 30),
+(5, 'Gumka do włosów - welurowa', '19.00', 20),
+(6, 'Gumka do włosów - welurowa XL', '29.00', 20),
+(7, 'Pełna kuracja Modify Reductor', '387.00', 10),
+(8, 'Pełna kuracja Modify Femibra', '417.00', 10),
+(9, 'Zestaw świąteczny Modify Reductor', '199.00', 15),
+(10, 'Zestaw świąteczny Modify Femibra', '256.00', 15);
 
 -- --------------------------------------------------------
 
@@ -285,9 +312,11 @@ INSERT INTO `salary` (`Id_salary`, `Influencer_Id_influencer`, `InfluencerAction
 (8, 7, 8, '500.00', '2021-11-02'),
 (9, 10, 9, '40.00', '2021-11-03'),
 (10, 8, 10, '200.00', '2021-08-10'),
-(11, 1, 1, '0.00', '2021-12-23'),
-(12, 1, 11, '0.00', '2021-12-04'),
-(13, 4, 13, '250.00', '2021-12-04');
+(13, 4, 13, '250.00', '2021-12-04'),
+(14, 1, 14, '40.00', '2022-01-13'),
+(15, 4, 15, '50.00', '2022-01-13'),
+(16, 4, 16, '250.00', '2022-01-13'),
+(17, 2, 17, '30.00', '2022-01-20');
 
 -- --------------------------------------------------------
 
@@ -346,7 +375,18 @@ INSERT INTO `shipping` (`Id_shipping`, `Influencer_Id_influencer`, `Product_Id_p
 (9, 8, 2, '2021-07-11'),
 (10, 9, 1, '2021-11-06'),
 (11, 10, 9, '2021-11-15'),
-(12, 1, 4, '2021-11-08');
+(12, 1, 4, '2021-11-08'),
+(13, 6, 2, '2022-01-20');
+
+--
+-- Triggers `shipping`
+--
+DELIMITER $$
+CREATE TRIGGER `update_stock` AFTER INSERT ON `shipping` FOR EACH ROW BEGIN
+	CALL ProductStock (NEW.Product_Id_product, 1);
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -443,7 +483,7 @@ ALTER TABLE `influencer`
 -- AUTO_INCREMENT for table `influenceraction`
 --
 ALTER TABLE `influenceraction`
-  MODIFY `Id_influencer_action` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `Id_influencer_action` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `product`
@@ -455,7 +495,7 @@ ALTER TABLE `product`
 -- AUTO_INCREMENT for table `salary`
 --
 ALTER TABLE `salary`
-  MODIFY `Id_salary` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `Id_salary` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `service`
@@ -467,7 +507,7 @@ ALTER TABLE `service`
 -- AUTO_INCREMENT for table `shipping`
 --
 ALTER TABLE `shipping`
-  MODIFY `Id_shipping` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `Id_shipping` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
