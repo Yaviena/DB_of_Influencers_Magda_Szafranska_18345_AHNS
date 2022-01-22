@@ -1,6 +1,6 @@
 ## **The report of DataBase (SQL)**
 
-Here ae my documents for pass out the class "DataBase (SQL)",<br />leading by dr hab. Filip Rudziński.
+Here are my documents for pass out the class "DataBase (SQL)",<br />leading by dr hab. Filip Rudziński.
 
 ## **Files of laboratories**
 
