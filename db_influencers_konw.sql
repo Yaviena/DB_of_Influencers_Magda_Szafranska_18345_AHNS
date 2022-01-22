@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 22, 2022 at 03:49 PM
+-- Generation Time: Jan 22, 2022 at 06:54 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.11
 
@@ -20,31 +20,103 @@ SET time_zone = "+00:00";
 --
 -- Database: `db_influencers_konw`
 --
+CREATE DATABASE IF NOT EXISTS `db_influencers_konw` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+USE `db_influencers_konw`;
 
 DELIMITER $$
 --
 -- Procedures
 --
-$$
+DROP PROCEDURE IF EXISTS `AllInfluencerActions`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AllInfluencerActions` ()  BEGIN
+    SELECT influencer.Id_influencer AS InfluencerID,
+    FullName(influencer.first_name, influencer.last_name) AS FullName,
+    service.name AS service,
+    influenceraction.date AS Date
+    FROM influencer, influenceraction, service
+    WHERE influencer.Id_influencer = influenceraction.Influencer_Id_influencer
+    AND influenceraction.Service_Id_service = service.Id_service
+    ORDER BY Date;
+END$$
 
-$$
+DROP PROCEDURE IF EXISTS `GetFullInfluencerData`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetFullInfluencerData` ()  BEGIN
+    SELECT FullName(influencer.first_name, influencer.last_name) AS FullName,
+    InfluencerLevel(influencer.followers) AS InfluencerType,
+    influencer.discount_code AS DiscountCode,
+    address.city AS City
+    FROM influencer, address
+    WHERE influencer.Address_Id_address = address.Id_address
+    ORDER BY InfluencerType;
+END$$
 
-$$
+DROP PROCEDURE IF EXISTS `InfluencerActions`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerActions` (IN `idInf` INT)  BEGIN
+    SELECT influencer.Id_influencer AS InfluencerID,
+    FullName(influencer.first_name, influencer.last_name) AS FullName,
+    service.name AS service,
+    influenceraction.date AS Date
+    FROM influencer, influenceraction, service
+    WHERE influencer.Id_influencer = idInf
+    AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
+    AND influenceraction.Service_Id_service = service.Id_service
+    ORDER BY Date;
+END$$
 
-$$
+DROP PROCEDURE IF EXISTS `InfluencerSalary`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerSalary` (IN `idInf` INT)  BEGIN
+    SELECT influencer.Id_influencer AS InfluencerID,
+    FullName(influencer.first_name, influencer.last_name) AS FullName,
+    influenceraction.Id_influencer_action AS ActionID,
+    service.name AS service,
+    salary.value AS PLN,
+    salary.date AS Date
+    FROM influencer, influenceraction, service, salary
+    WHERE influencer.Id_influencer = idInf
+    AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
+    AND influenceraction.Service_Id_service = service.Id_service
+    AND influencer.Id_influencer = salary.Influencer_Id_influencer
+    AND salary.InfluencerAction_Id_influencer_action = influenceraction.Id_influencer_action
+    ORDER BY Date;
+END$$
 
-$$
+DROP PROCEDURE IF EXISTS `ProductStock`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ProductStock` (IN `productID` INT, IN `amount` INT)  BEGIN
+    SET @MESSAGE_TEXT = 'The state of a stock is 0 for this product!';
+    SET @GET_PRODUCT_AMOUNT = (SELECT product.Amount FROM product WHERE product.Id_product = productID LIMIT 1);
+
+    IF @GET_PRODUCT_AMOUNT - amount <= 0 THEN
+        SELECT @MESSAGE_TEXT;
+    ELSE
+          UPDATE product
+          SET product.Amount = product.Amount - amount
+          WHERE product.Id_product = productID;
+    END IF;
+   END$$
 
 --
 -- Functions
 --
-$$
+DROP FUNCTION IF EXISTS `AddNumbers`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `AddNumbers` (`val1` INT, `val2` INT) RETURNS INT(11) RETURN val1 + val2$$
 
-$$
+DROP FUNCTION IF EXISTS `FullName`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `FullName` (`first_name` VARCHAR(20), `last_name` VARCHAR(30)) RETURNS VARCHAR(50) CHARSET utf8 COLLATE utf8_unicode_ci RETURN CONCAT(first_name, ' ', last_name)$$
 
-$$
+DROP FUNCTION IF EXISTS `InfluencerLevel`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `InfluencerLevel` (`followers` INT(11)) RETURNS VARCHAR(20) CHARSET utf8 COLLATE utf8_unicode_ci BEGIN
+    DECLARE InfluencerLvl VARCHAR(20);
+    
+    IF followers >= 100000 THEN SET InfluencerLvl = 'MAKROinfluencer';
+    ELSEIF (followers < 100000 AND followers >= 10000) THEN SET InfluencerLvl = 'Influencer';
+    ELSE SET InfluencerLvl = 'Mikroinfluencer';
+    END IF;
+    
+    RETURN InfluencerLvl;
+ END$$
 
-$$
+DROP FUNCTION IF EXISTS `ValueToEuro`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `ValueToEuro` (`prodValue` DECIMAL(6,2), `newValue` DECIMAL(6,2)) RETURNS DECIMAL(6,2) RETURN prodValue / newValue$$
 
 DELIMITER ;
 
@@ -54,6 +126,7 @@ DELIMITER ;
 -- Table structure for table `address`
 --
 
+DROP TABLE IF EXISTS `address`;
 CREATE TABLE `address` (
   `Id_address` int(11) NOT NULL,
   `Country_Id_country` int(11) DEFAULT NULL,
@@ -86,6 +159,7 @@ INSERT INTO `address` (`Id_address`, `Country_Id_country`, `street`, `house_nr`,
 -- Table structure for table `country`
 --
 
+DROP TABLE IF EXISTS `country`;
 CREATE TABLE `country` (
   `Id_country` int(11) NOT NULL,
   `long_name` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -114,6 +188,7 @@ INSERT INTO `country` (`Id_country`, `long_name`, `short_name`) VALUES
 -- Stand-in structure for view `full_address_data`
 -- (See below for the actual view)
 --
+DROP VIEW IF EXISTS `full_address_data`;
 CREATE TABLE `full_address_data` (
 `first_name` varchar(50)
 ,`last_name` varchar(100)
@@ -130,6 +205,7 @@ CREATE TABLE `full_address_data` (
 -- Table structure for table `influencer`
 --
 
+DROP TABLE IF EXISTS `influencer`;
 CREATE TABLE `influencer` (
   `Id_influencer` int(11) NOT NULL,
   `Address_Id_address` int(11) DEFAULT NULL,
@@ -163,6 +239,7 @@ INSERT INTO `influencer` (`Id_influencer`, `Address_Id_address`, `first_name`, `
 -- Table structure for table `influenceraction`
 --
 
+DROP TABLE IF EXISTS `influenceraction`;
 CREATE TABLE `influenceraction` (
   `Id_influencer_action` int(11) NOT NULL,
   `Influencer_Id_influencer` int(11) DEFAULT NULL,
@@ -195,6 +272,7 @@ INSERT INTO `influenceraction` (`Id_influencer_action`, `Influencer_Id_influence
 --
 -- Triggers `influenceraction`
 --
+DROP TRIGGER IF EXISTS `new_salary`;
 DELIMITER $$
 CREATE TRIGGER `new_salary` AFTER INSERT ON `influenceraction` FOR EACH ROW INSERT INTO `salary` (`Id_salary`, `Influencer_Id_influencer`, `InfluencerAction_Id_influencer_action`, `value`, `date`) VALUES (NULL, NEW.Influencer_Id_influencer, NEW.Id_influencer_action,(SELECT value FROM `service` WHERE Id_service = NEW.Service_Id_service), DATE(NOW()))
 $$
@@ -206,6 +284,7 @@ DELIMITER ;
 -- Table structure for table `product`
 --
 
+DROP TABLE IF EXISTS `product`;
 CREATE TABLE `product` (
   `Id_product` int(11) NOT NULL,
   `name` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -236,6 +315,7 @@ INSERT INTO `product` (`Id_product`, `name`, `price`, `Amount`) VALUES
 -- Table structure for table `salary`
 --
 
+DROP TABLE IF EXISTS `salary`;
 CREATE TABLE `salary` (
   `Id_salary` int(11) NOT NULL,
   `Influencer_Id_influencer` int(11) DEFAULT NULL,
@@ -271,6 +351,7 @@ INSERT INTO `salary` (`Id_salary`, `Influencer_Id_influencer`, `InfluencerAction
 -- Table structure for table `service`
 --
 
+DROP TABLE IF EXISTS `service`;
 CREATE TABLE `service` (
   `Id_service` int(11) NOT NULL,
   `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -299,6 +380,7 @@ INSERT INTO `service` (`Id_service`, `name`, `value`) VALUES
 -- Table structure for table `shipping`
 --
 
+DROP TABLE IF EXISTS `shipping`;
 CREATE TABLE `shipping` (
   `Id_shipping` int(11) NOT NULL,
   `Influencer_Id_influencer` int(11) DEFAULT NULL,
@@ -328,6 +410,7 @@ INSERT INTO `shipping` (`Id_shipping`, `Influencer_Id_influencer`, `Product_Id_p
 --
 -- Triggers `shipping`
 --
+DROP TRIGGER IF EXISTS `update_stock`;
 DELIMITER $$
 CREATE TRIGGER `update_stock` AFTER INSERT ON `shipping` FOR EACH ROW BEGIN
 	CALL ProductStock (NEW.Product_Id_product, 1);
@@ -338,11 +421,18 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Structure for view `full_address_data`
+-- Structure for view `full_address_data` exported as a table
 --
 DROP TABLE IF EXISTS `full_address_data`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `full_address_data`  AS SELECT `i`.`first_name` AS `first_name`, `i`.`last_name` AS `last_name`, `a`.`street` AS `street`, `a`.`house_nr` AS `house_nr`, `a`.`post_code` AS `post_code`, `a`.`city` AS `city`, `c`.`long_name` AS `long_name` FROM ((`influencer` `i` left join `address` `a` on(`i`.`Address_Id_address` = `a`.`Id_address`)) left join `country` `c` on(`a`.`Country_Id_country` = `c`.`Id_country`)) ;
+CREATE TABLE`full_address_data`(
+    `first_name` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
+    `last_name` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+    `street` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL,
+    `house_nr` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+    `post_code` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+    `city` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+    `long_name` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL
+);
 
 --
 -- Indexes for dumped tables
