@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 21, 2022 at 11:54 AM
+-- Generation Time: Jan 22, 2022 at 02:37 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.11
 
@@ -75,10 +75,17 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerSalary` (IN `idInf` INT) 
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ProductStock` (IN `productID` INT, IN `amount` INT)  BEGIN
-	UPDATE product
-    	SET product.Amount = product.Amount - amount
-    	WHERE product.Id_product = productID;
-END$$
+    SET @MESSAGE_TEXT = 'The state of a stock is 0 for this product!';
+    SET @GET_PRODUCT_AMOUNT = (SELECT product.Amount FROM product WHERE product.Id_product = productID LIMIT 1);
+
+    IF @GET_PRODUCT_AMOUNT - amount <= 0 THEN
+        SELECT @MESSAGE_TEXT;
+    ELSE
+          UPDATE product
+          SET product.Amount = product.Amount - amount
+          WHERE product.Id_product = productID;
+    END IF;
+   END$$
 
 --
 -- Functions
@@ -272,7 +279,7 @@ CREATE TABLE `product` (
 --
 
 INSERT INTO `product` (`Id_product`, `name`, `price`, `Amount`) VALUES
-(1, 'Modify Reductor', '129.00', 99),
+(1, 'Modify Reductor', '129.00', 94),
 (2, 'Modify Femibra', '139.00', 67),
 (3, 'Gumka do włosów - lniana ', '29.00', 20),
 (4, 'Gumka do włosów - lniana XL', '49.00', 30),
@@ -281,7 +288,7 @@ INSERT INTO `product` (`Id_product`, `name`, `price`, `Amount`) VALUES
 (7, 'Pełna kuracja Modify Reductor', '387.00', 10),
 (8, 'Pełna kuracja Modify Femibra', '417.00', 10),
 (9, 'Zestaw świąteczny Modify Reductor', '199.00', 15),
-(10, 'Zestaw świąteczny Modify Femibra', '256.00', 15);
+(10, 'Zestaw świąteczny Modify Femibra', '256.00', 1);
 
 -- --------------------------------------------------------
 
@@ -489,7 +496,7 @@ ALTER TABLE `influenceraction`
 -- AUTO_INCREMENT for table `product`
 --
 ALTER TABLE `product`
-  MODIFY `Id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `Id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `salary`
