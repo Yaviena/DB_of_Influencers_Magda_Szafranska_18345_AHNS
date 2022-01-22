@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 22, 2022 at 02:37 PM
+-- Generation Time: Jan 22, 2022 at 03:49 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 8.0.11
 
@@ -25,87 +25,26 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AllInfluencerActions` ()  BEGIN
-    SELECT influencer.Id_influencer AS InfluencerID,
-    FullName(influencer.first_name, influencer.last_name) AS FullName,
-    service.name AS service,
-    influenceraction.date AS Date
-    FROM influencer, influenceraction, service
-    WHERE influencer.Id_influencer = influenceraction.Influencer_Id_influencer
-    AND influenceraction.Service_Id_service = service.Id_service
-    ORDER BY Date;
-END$$
+$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetFullInfluencerData` ()  BEGIN
-    SELECT FullName(influencer.first_name, influencer.last_name) AS FullName,
-    InfluencerLevel(influencer.followers) AS InfluencerType,
-    influencer.discount_code AS DiscountCode,
-    address.city AS City
-    FROM influencer, address
-    WHERE influencer.Address_Id_address = address.Id_address
-    ORDER BY InfluencerType;
-END$$
+$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerActions` (IN `idInf` INT)  BEGIN
-    SELECT influencer.Id_influencer AS InfluencerID,
-    FullName(influencer.first_name, influencer.last_name) AS FullName,
-    service.name AS service,
-    influenceraction.date AS Date
-    FROM influencer, influenceraction, service
-    WHERE influencer.Id_influencer = idInf
-    AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
-    AND influenceraction.Service_Id_service = service.Id_service
-    ORDER BY Date;
-END$$
+$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `InfluencerSalary` (IN `idInf` INT)  BEGIN
-    SELECT influencer.Id_influencer AS InfluencerID,
-    FullName(influencer.first_name, influencer.last_name) AS FullName,
-    influenceraction.Id_influencer_action AS ActionID,
-    service.name AS service,
-    salary.value AS PLN,
-    salary.date AS Date
-    FROM influencer, influenceraction, service, salary
-    WHERE influencer.Id_influencer = idInf
-    AND influencer.Id_influencer = influenceraction.Influencer_Id_influencer
-    AND influenceraction.Service_Id_service = service.Id_service
-    AND influencer.Id_influencer = salary.Influencer_Id_influencer
-    AND salary.InfluencerAction_Id_influencer_action = influenceraction.Id_influencer_action
-    ORDER BY Date;
-END$$
+$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `ProductStock` (IN `productID` INT, IN `amount` INT)  BEGIN
-    SET @MESSAGE_TEXT = 'The state of a stock is 0 for this product!';
-    SET @GET_PRODUCT_AMOUNT = (SELECT product.Amount FROM product WHERE product.Id_product = productID LIMIT 1);
-
-    IF @GET_PRODUCT_AMOUNT - amount <= 0 THEN
-        SELECT @MESSAGE_TEXT;
-    ELSE
-          UPDATE product
-          SET product.Amount = product.Amount - amount
-          WHERE product.Id_product = productID;
-    END IF;
-   END$$
+$$
 
 --
 -- Functions
 --
-CREATE DEFINER=`root`@`localhost` FUNCTION `AddNumbers` (`val1` INT, `val2` INT) RETURNS INT(11) RETURN val1 + val2$$
+$$
 
-CREATE DEFINER=`root`@`localhost` FUNCTION `FullName` (`first_name` VARCHAR(20), `last_name` VARCHAR(30)) RETURNS VARCHAR(50) CHARSET utf8 COLLATE utf8_unicode_ci RETURN CONCAT(first_name, ' ', last_name)$$
+$$
 
-CREATE DEFINER=`root`@`localhost` FUNCTION `InfluencerLevel` (`followers` INT(11)) RETURNS VARCHAR(20) CHARSET utf8 COLLATE utf8_unicode_ci BEGIN
-    DECLARE InfluencerLvl VARCHAR(20);
-    
-    IF followers >= 100000 THEN SET InfluencerLvl = 'MAKROinfluencer';
-    ELSEIF (followers < 100000 AND followers >= 10000) THEN SET InfluencerLvl = 'Influencer';
-    ELSE SET InfluencerLvl = 'Mikroinfluencer';
-    END IF;
-    
-    RETURN InfluencerLvl;
- END$$
+$$
 
-CREATE DEFINER=`root`@`localhost` FUNCTION `ValueToEuro` (`prodValue` DECIMAL(6,2), `newValue` DECIMAL(6,2)) RETURNS DECIMAL(6,2) RETURN prodValue / newValue$$
+$$
 
 DELIMITER ;
 
@@ -288,7 +227,8 @@ INSERT INTO `product` (`Id_product`, `name`, `price`, `Amount`) VALUES
 (7, 'Pełna kuracja Modify Reductor', '387.00', 10),
 (8, 'Pełna kuracja Modify Femibra', '417.00', 10),
 (9, 'Zestaw świąteczny Modify Reductor', '199.00', 15),
-(10, 'Zestaw świąteczny Modify Femibra', '256.00', 1);
+(10, 'Zestaw świąteczny Modify Femibra', '256.00', 1),
+(14, 'Nowy produkt dla User2', '100.00', 5);
 
 -- --------------------------------------------------------
 
@@ -496,7 +436,7 @@ ALTER TABLE `influenceraction`
 -- AUTO_INCREMENT for table `product`
 --
 ALTER TABLE `product`
-  MODIFY `Id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `Id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `salary`
